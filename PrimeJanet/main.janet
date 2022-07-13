@@ -4,7 +4,7 @@
   (let [primes (array/new-filled n true)
         sqrt-n (math/ceil (math/sqrt n))]
     # remove all even numbers
-    (loop [j :range [0 n] :when (even? j)] (put primes j false))
+    (loop [j :range [0 n 2]] (put primes j false))
     # 3 will be the first candidate we test
     (var p 3)
     (if (< n 2)
@@ -24,7 +24,7 @@
 
 
 
-# Just running this is ~170ms which is an order of magnitude slower than the clojure 
+# Running this is ~90ms which is ~5x slower than the clojure 
 (sieve limit)
 
 # just this alone takes 5ms which seems pretty slow not gonna lie:
