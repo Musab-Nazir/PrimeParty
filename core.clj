@@ -1,5 +1,6 @@
 (ns test.core
-  (:require [clojure.core.reducers :as r]))
+  (:require [clojure.core.reducers :as r])
+    (:import [java.time Instant Duration]))
 
 (defn sieve
   [^long n]
@@ -57,3 +58,42 @@
     stuff))
 
 (time (last (sieve-reduced 1000000))) ; 906s approx yikes
+
+(defn sieve-ba
+  "Java boolean array storage
+   Returns the raw sieve with only odd numbers present."
+  [^long n]
+  (if (< n 2)
+    (boolean-array 0)
+    (let [sqrt-n (unchecked-long (Math/ceil (Math/sqrt (double n))))
+          half-n (unchecked-int (bit-shift-right n 1))
+          primes (boolean-array half-n)]
+      (loop [p 3]
+        (when (< p sqrt-n)
+          (when-not (aget primes (bit-shift-right p 1))
+            (loop [i (long (bit-shift-right (* p p) 1))]
+              (when (< i half-n)
+                (aset primes i true)
+                (recur (+ i p)))))
+          (recur (+ p 2))))
+      primes)))
+
+(defn benchmark
+  "Benchmark Sieve of Eratosthenes algorithm."
+  [sieve]
+  (let [limit       1000000
+        start-time  (Instant/now)
+        end-by      (+ (.toEpochMilli start-time) 5000)]
+    (loop [pass 1]
+      (let [primes   (sieve limit)
+            cur-time (System/currentTimeMillis)]
+        (if (<= cur-time end-by)
+          (recur (inc pass))
+          ;; Return benchmark report.
+          {:primes primes
+           :passes pass
+           :limit  limit
+           :time   (Duration/between start-time (Instant/now))})))))
+
+(benchmark primes-below)
+(benchmark sieve-ba)
